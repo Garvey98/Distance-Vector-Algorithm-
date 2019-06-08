@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class WsbRouter {
+public class Router {
   // 路由表文件位置（初始值）
   private static File routerTablePrefFile = new File("routerTable.txt");
   // 路由表数据结构
@@ -19,7 +19,7 @@ public class WsbRouter {
   // 节点的收敛状态：Converging / Steady
   private static String iterationStatus = "Converging";
   // 节点路由表
-  private static WsbRouterTable nodeRouterTable[];
+  private static RouterTable nodeRouterTable[];
   private static String[] routerName = { "A", "B", "C", "D", "E" };
 
   /**
@@ -70,9 +70,9 @@ public class WsbRouter {
   public static void InitRouter(){
     int routerTableRow = allRouterTable.size();
     int routerTableCol = allRouterTable.get(0).size();
-    nodeRouterTable = new WsbRouterTable[5];
+    nodeRouterTable = new RouterTable[5];
     for (int i = 0; i < routerTableRow; i++) {
-      nodeRouterTable[i] = new WsbRouterTable(i);
+      nodeRouterTable[i] = new RouterTable(i);
       nodeRouterTable[i].setNeighborRouter(allRouterTable.get(i));
       int des;
       for (int j = 0; j < routerTableCol; j++) {
@@ -159,7 +159,7 @@ public class WsbRouter {
     System.out.println("        Available nodes: \"A, B, C, D, E\".\n");
     System.out.println("[INFO] Router Initialize\n");
 
-    allRouterTable = WsbRouter.readRouterTable(routerTablePrefFile);
+    allRouterTable = Router.readRouterTable(routerTablePrefFile);
     printRouterTable(allRouterTable);
     InitRouter();
 

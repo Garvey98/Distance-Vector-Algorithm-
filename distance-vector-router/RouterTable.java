@@ -1,6 +1,6 @@
 import java.util.List;
 
-public class WsbRouterTable {
+public class RouterTable {
   private int id;
   private int[][] myRouterTable = new int[5][3];
   private int[] neighborRouter = new int[5];
@@ -45,7 +45,7 @@ public class WsbRouterTable {
     return neighborRouter;
   } 
 
-  public WsbRouterTable(int id) {
+  public RouterTable(int id) {
     this.id = id;
     for (int i = 0; i < myRouterTable.length; i++) {
       for (int j = 0; j < myRouterTable[0].length; j++) {
