@@ -1,19 +1,10 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 
 public class WsbRouterTable {
   private int id;
   private int[][] myRouterTable = new int[5][3];
   private int[] neighborRouter = new int[5];
+  private static String[] routerName = { "A", "B", "C", "D", "E" };
 
   public void setmyRouterTable(int des, int dis, int name) {
     myRouterTable[des][0] = des;
@@ -24,7 +15,15 @@ public class WsbRouterTable {
   public void printRouterTable(){
     for (int i = 0; i < myRouterTable.length; i++) {
       for (int j = 0; j < myRouterTable[0].length; j++) {
-        System.out.print(myRouterTable[i][j]);
+        if (myRouterTable[i][0] == -1) {
+          System.out.print(myRouterTable[i][j]);         
+        } 
+        else if (j!=1) {
+          System.out.print(routerName[myRouterTable[i][j]]);  
+        }
+        else {
+          System.out.print(myRouterTable[i][j]);  
+        }
         System.out.print(" ");
       }
       System.out.println();
@@ -36,7 +35,6 @@ public class WsbRouterTable {
       if ((!s.get(i).equals("0")) && (!s.get(i).equals("-"))) {
         // System.out.println(s.get(i));
         neighborRouter[i] = 1;
-        System.out.println(i);
       } else {
         neighborRouter[i] = 0;
       }
