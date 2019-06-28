@@ -1,41 +1,25 @@
 package SoftRouter;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class RouterThread implements Runnable {
   private int id;
-  private int portNUm;
+  private String RouterPort[][] = new String[5][2];
   private int[][] nodeRouterTable = new int[5][3];
   private List<List<String>> allRouterTable;
   private int[] neighborRouter = new int[5];
   private static String[] routerName = { "A", "B", "C", "D", "E" };
-  private Timer timer;
 
-  TimerTask task = new TimerTask(){
-  
-    @Override
-    public void run() {
-      updateAllRouterTable();
-      printNodeRouterTable();
-    }
-  };
-
-
-  public RouterThread(int id, List<List<String>> allRouterTable){
+  public RouterThread(int id, String[][] RouterPort) {
     this.id = id;
-    this.allRouterTable = allRouterTable;
-    timer = new Timer();
+    this.RouterPort = RouterPort;
     for (int i = 0; i < nodeRouterTable.length; i++) {
       for (int j = 0; j < nodeRouterTable[0].length; j++) {
         nodeRouterTable[i][j] = -1;
@@ -43,27 +27,28 @@ public class RouterThread implements Runnable {
     }
   }
 
-  public void initNodeRouterTable(){
-      int des;
-      for (int j = 0; j < allRouterTable.get(0).size(); j++) {
-        if (allRouterTable.get(id).get(j).equals("-")) {
-          //do nothing
-        } else {
-          des = Integer.parseInt(allRouterTable.get(id).get(j));
-          nodeRouterTable[j][0] = j;
-          nodeRouterTable[j][1] = des;
-          nodeRouterTable[j][2] = j;
-        }
+  public void initNodeRouterTable(List<List<String>> allRouterTable) {
+    int des;
+    for (int j = 0; j < allRouterTable.get(0).size(); j++) {
+      if (allRouterTable.get(id).get(j).equals("-")) {
+        // do nothing
+      } else {
+        des = Integer.parseInt(allRouterTable.get(id).get(j));
+        nodeRouterTable[j][0] = j;
+        nodeRouterTable[j][1] = des;
+        nodeRouterTable[j][2] = j;
       }
+    }
   }
 
-  public void updateAllRouterTable(){
+  public void updateAllRouterTable(List<List<String>> allRouterTable) {
+    this.allRouterTable = allRouterTable;
     List<String> sourceNodeInfo = allRouterTable.get(id);
     for (int i = 0; i < allRouterTable.get(0).size(); i++) {
       if (neighborRouter[i] == 0) {
         continue;
       }
-      if (i!=id) {
+      if (i != id) {
         if (!sourceNodeInfo.get(i).equals("-")) {
           if (!sourceNodeInfo.get(i).equals("0")) {
             int toAdjNodeDist = Integer.parseInt(sourceNodeInfo.get(i));
@@ -81,7 +66,7 @@ public class RouterThread implements Runnable {
                       setNodeRouterTable(j, newDist, i);
                       allRouterTable.get(id).set(j, Integer.toString(newDist));
                     } else {
-                      if (newDist < Integer.parseInt(sourceNodeInfo.get(j))) {
+                      if (newDist <= Integer.parseInt(sourceNodeInfo.get(j))) {
                         setNodeRouterTable(j, newDist, i);
                         allRouterTable.get(id).set(j, Integer.toString(newDist));
                       }
@@ -96,11 +81,11 @@ public class RouterThread implements Runnable {
     }
   }
 
-  public List<List<String>> getAllRouterTable(){
+  public List<List<String>> getAllRouterTable() {
     return allRouterTable;
   }
 
-  public void setNeighborRouter(List<String> s){
+  public void setNeighborRouter(List<String> s) {
     for (int i = 0; i < s.size(); i++) {
       if ((!s.get(i).equals("0")) && (!s.get(i).equals("-"))) {
         // System.out.println(s.get(i));
@@ -117,17 +102,15 @@ public class RouterThread implements Runnable {
     nodeRouterTable[des][2] = name;
   }
 
-  public void printNodeRouterTable(){
+  public synchronized void printNodeRouterTable() {
     for (int i = 0; i < nodeRouterTable.length; i++) {
       for (int j = 0; j < nodeRouterTable[0].length; j++) {
         if (nodeRouterTable[i][0] == -1) {
-          System.out.print(nodeRouterTable[i][j]);         
-        } 
-        else if (j!=1) {
-          System.out.print(routerName[nodeRouterTable[i][j]]);  
-        }
-        else {
-          System.out.print(nodeRouterTable[i][j]);  
+          System.out.print(nodeRouterTable[i][j]);
+        } else if (j != 1) {
+          System.out.print(routerName[nodeRouterTable[i][j]]);
+        } else {
+          System.out.print(nodeRouterTable[i][j]);
         }
         System.out.print(" ");
       }
@@ -135,10 +118,34 @@ public class RouterThread implements Runnable {
     }
   }
 
-  public void run(){
-    System.out.println(id);
-    // long tt = 5000;
-    // timer.schedule(task, tt);
-    
+  public synchronized int sendPacket(int source, int des, int ttl, String message)
+      throws UnknownHostException, SocketException {
+    if (nodeRouterTable[des][1] == -1) {
+      return 0;
+    }
+    int nextHop = Integer.parseInt(RouterPort[nodeRouterTable[des][2]][1]);
+
+    RouterPacket packet1 = new RouterPacket(source, des, ttl, message);
+    UDPSender udpSender1 = new UDPSender(id, nextHop, packet1);
+    udpSender1.run();
+
+    return 1;
+  }
+
+  public void receivePacket(int port)
+      throws SocketException, UnknownHostException {
+    UDPReceiver udpReceiver = new UDPReceiver(id, port, RouterPort, nodeRouterTable);
+    udpReceiver.start();
+  }
+
+  public synchronized void run(){
+    int port = Integer.parseInt(RouterPort[id][1]);
+    try {
+      receivePacket(port);
+    } catch (SocketException e) {
+      e.printStackTrace();
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+    }
   }
 }

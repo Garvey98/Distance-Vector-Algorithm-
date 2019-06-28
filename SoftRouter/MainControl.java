@@ -10,6 +10,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
 
 public class MainControl {
   private static File RouterPortFile = new File("SoftRouter/RouterPort.txt");
@@ -25,6 +31,7 @@ public class MainControl {
   // 节点路由表
   private static int[][] nodeRouterTable;
   private static String[] routerName = { "A", "B", "C", "D", "E" };
+  private static Timer timer;
 
   /**
    * Read router table
@@ -33,7 +40,7 @@ public class MainControl {
    * @return List<List<String>> 路由表数据结构（二维列表）
    */
   public static List<List<String>> readRouterTable(File file) throws FileNotFoundException, IOException {
-    List<List<String>> allRouterTable = new ArrayList<List<String>>();
+    final List<List<String>> allRouterTable = new ArrayList<List<String>>();
     BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
 
     String fileString;
@@ -93,7 +100,14 @@ public class MainControl {
     }
   }
 
-  public static void main(String[] args) throws FileNotFoundException, IOException {
+  public static void main(String[] args)
+      throws FileNotFoundException, IOException, ParserConfigurationException, SAXException {
+    System.out.println("[Usage] Input name of node to get node attributes.");
+    System.out.println("        Input \"RT\" to get all router table.");
+    System.out.println("        Input \"SP\" to send message.");
+    System.out.println("        Input \"ST\" to show statistice.");
+    System.out.println("        Available nodes: \"A, B, C, D, E\".\n");
+    System.out.println("[INFO] Router Initialize\n");
     allRouterTable = SoftRouter.MainControl.readRouterTable(routerTablePrefFile);
     printRouterTable(allRouterTable);
     ReadRouterPort(RouterPortFile);
@@ -101,23 +115,87 @@ public class MainControl {
     Thread[] routerId;
     rt = new RouterThread[5];
     routerId = new Thread[5];
+
     for (int i = 0; i < 5; i++) {
-    rt[i] = new RouterThread(i, allRouterTable);
-    routerId[i] = new Thread(rt[i]);
-    routerId[i].start();
+      rt[i] = new RouterThread(i, RouterPort);
+      routerId[i] = new Thread(rt[i]);
+      routerId[i].start();
+      rt[i].setNeighborRouter(allRouterTable.get(0));
+      rt[i].initNodeRouterTable(allRouterTable);
     }
-    // rt[0] = new RouterThread(0, allRouterTable);
+
+    // rt[0] = new RouterThread(0);
     // routerId[0] = new Thread(rt[0]);
     // routerId[0].start();
-    // rt[1] = new RouterThread(1, allRouterTable);
+    // rt[1] = new RouterThread(1);
     // routerId[1] = new Thread(rt[1]);
     // routerId[1].start();
 
-    rt[0].initNodeRouterTable();
-    rt[0].setNeighborRouter(allRouterTable.get(0));
-    rt[0].printNodeRouterTable();
-    rt[1].printNodeRouterTable();
+    // rt[0].initNodeRouterTable();
+    // rt[0].printNodeRouterTable();
+    // rt[0].updateAllRouterTable(allRouterTable);
+    // rt[0].printNodeRouterTable();
+    // printRouterTable(rt[0].getAllRouterTable());
+    // printRouterTable(allRouterTable);
+    // rt[1].printNodeRouterTable();
+
+    TimerTask task = new TimerTask() {
+
+      @Override
+      public void run() {
+        for (int i = 0; i < 5; i++) {
+          rt[i].updateAllRouterTable(allRouterTable);
+        }
+      }
+    };
+    timer = new Timer();
+    long tt = 500;
+    timer.schedule(task, tt, tt);
 
     // rt[0].printNodeRouterTable();
+    Scanner scanner = new Scanner(System.in);
+    while (true) {
+      String input = scanner.nextLine();
+      if (input.equals("q") || input.equals("Q")) {
+        timer.cancel();
+        // for (int i = 0; i < 5; i++) {
+        // routerId[i].stop();
+        // }
+        break;
+      }
+      if (input.equals("RT") || input.equals("rt")) {
+        printRouterTable(allRouterTable);
+      }
+      if (input.equals("SP") || input.equals("sp")) {
+        String m_source = scanner.nextLine();
+        if ("ABCDEabcde".contains(m_source)) {
+          String m_target = scanner.nextLine();
+          if ("ABCDEabcde".contains(m_target)) {
+            String m_ttl = scanner.nextLine();
+            int ttl = Integer.parseInt(m_ttl);
+            if (ttl >= 0) {
+              String m_data = scanner.nextLine();
+              int source = routerNodeMap.get(m_source.toUpperCase());
+              int des = routerNodeMap.get(m_target.toUpperCase());
+              int ACK = rt[source].sendPacket(source, des, ttl, m_data);
+              if (ACK == 1) {
+                System.out.println("Send success");
+              } else {
+                System.out.println("No path for this message");
+              }
+            }
+          } else {
+            System.out.println("Wrong destination");
+          }
+        } else {
+          System.out.println("Wrong source address");
+        }
+      }
+      if (input.equals("ST") || input.equals("st")) {
+        Statistics statistics = new Statistics();
+        statistics.printStats();
+      }
+    }
+    scanner.close();
   }
 }
