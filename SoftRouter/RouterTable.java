@@ -14,17 +14,15 @@ public class RouterTable {
     myRouterTable[des][2] = name;
   }
 
-  public void printRouterTable(){
+  public void printRouterTable() {
     for (int i = 0; i < myRouterTable.length; i++) {
       for (int j = 0; j < myRouterTable[0].length; j++) {
         if (myRouterTable[i][0] == -1) {
-          System.out.print(myRouterTable[i][j]);         
-        } 
-        else if (j!=1) {
-          System.out.print(routerName[myRouterTable[i][j]]);  
-        }
-        else {
-          System.out.print(myRouterTable[i][j]);  
+          System.out.print(myRouterTable[i][j]);
+        } else if (j != 1) {
+          System.out.print(routerName[myRouterTable[i][j]]);
+        } else {
+          System.out.print(myRouterTable[i][j]);
         }
         System.out.print(" ");
       }
@@ -45,7 +43,7 @@ public class RouterTable {
 
   public int[] getNeighborRouter() {
     return neighborRouter;
-  } 
+  }
 
   public RouterTable(int id) {
     this.id = id;

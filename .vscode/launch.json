@@ -6,6 +6,14 @@
   "configurations": [
     {
       "type": "java",
+      "name": "CodeLens (Launch) - MainControl",
+      "request": "launch",
+      "mainClass": "SoftRouter.MainControl",
+      "projectName": "Distance-Vector-Algorithm_b55d84b2",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "java",
       "name": "Debug (Launch) - Current File",
       "request": "launch",
       "mainClass": "${file}",

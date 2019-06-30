@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><statistics>
 <node id="0">
 <send>
-<packet>sourcePort='0', targetPort='1', timeToLive='3', data='hello'</packet></send>
+</send>
 </node>
 <node id="1">
 <send>
@@ -13,10 +13,10 @@
 </node>
 <node id="3">
 <send>
-<packet>sourcePort='3', targetPort='0', timeToLive='3', data='test'</packet></send>
+</send>
 </node>
 <node id="4">
 <send>
-<packet>sourcePort='3', targetPort='0', timeToLive='2', data='test'</packet></send>
+</send>
 </node>
 </statistics>

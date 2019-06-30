@@ -1,13 +1,8 @@
 package SoftRouter;
 
-import java.io.*;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 
 public class RouterThread implements Runnable {
   private int id;
